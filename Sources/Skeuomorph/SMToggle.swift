@@ -1,6 +1,6 @@
 import SwiftUI
 
-// I used this code https://github.com/elvin-hu/SwiftUIiOS6Toggle/blob/master/iOS6Toggle/ContentView.swift
+// I adapted this code https://github.com/elvin-hu/SwiftUIiOS6Toggle/blob/master/iOS6Toggle/ContentView.swift
 struct SMToggle: ToggleStyle {
     
     // Displacement of the knob.
@@ -209,13 +209,14 @@ struct SMToggle: ToggleStyle {
 
 struct SMToggle_Previews: PreviewProvider {
     
-    @State private static var isOn: Bool = true
+    @State private static var isOn: Bool = false
+    @State private static var viewDisplacement: CGSize = .zero
+    @State private static var shouldShowBlueBackground: Bool = false
     
     static var previews: some View {
         Toggle(isOn: $isOn, label: {
             Text("Selected")
         })
-            .toggleStyle(SMToggle())
-            //.previewLayout(.fixed(width: 300, height: 150))
+            .toggleStyle(SMToggle(viewDisplacement: $viewDisplacement, shouldShowBlueBackground: $shouldShowBlueBackground))
     }
 }
