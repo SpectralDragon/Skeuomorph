@@ -1,7 +1,7 @@
 import SwiftUI
 
 // I adapted this code https://github.com/elvin-hu/SwiftUIiOS6Toggle/blob/master/iOS6Toggle/ContentView.swift
-public struct SkeuomorphToggleStyle: ToggleStyle {
+public struct SMToggleStyle: ToggleStyle {
     
     public init() {}
     
@@ -53,7 +53,7 @@ public struct SkeuomorphToggleStyle: ToggleStyle {
                 
                 // Toggle blue background - moves with the gesture
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(red: 4/255, green: 125/255, blue: 229/255))
+                    .fill(Color.accentColor)
                     .frame(width: 92, height: 32)
                     .offset(x: self.isOn ? 0 : -60)
                     .offset(x: viewDisplacement.width)
@@ -221,7 +221,7 @@ public struct SkeuomorphToggleStyle: ToggleStyle {
     }
 }
 
-
+#if DEBUG
 struct SMToggle_Previews: PreviewProvider {
     
     @State private static var isOn: Bool = false
@@ -230,6 +230,8 @@ struct SMToggle_Previews: PreviewProvider {
         Toggle(isOn: $isOn, label: {
             Text("Selected")
         })
-            .toggleStyle(SkeuomorphToggleStyle())
+            .toggleStyle(SMToggleStyle())
     }
 }
+
+#endif
