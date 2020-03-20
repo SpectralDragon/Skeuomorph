@@ -11,7 +11,7 @@ import Skeuomorph
 
 struct ContentView: View {
     
-    @State var isSkeuomorphed = false
+    @State var isSkeuomorphed = true
     @State var isOn1 = false
     @State var isOn2 = false
     
@@ -24,6 +24,7 @@ struct ContentView: View {
     @State var date: Date = Date()
     
     @State var isAlertPresented = false
+    @State var isActionSheetPresented = false
     
     let message: String = """
     Очень много текста, чтобы можно было даже скролить. Если текст не вмещается, это критично, так что будем как-то выруливать.
@@ -37,47 +38,98 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack {
+                
                 Toggle(isOn: $isSkeuomorphed.animation(), label: {
                     Text(isSkeuomorphed ? "turn off Skeuomorph" : "turn on Skeuomorph")
                 })
+                    .toggleStyle(SMToggleStyle())
+                    .padding(.top, 32)
                 
-                TextField("Hello", text: self.$textFieldValue)
+                Spacer()
                 
-                SMSlider(value: $value, minimumValueLabel: Text("Kek"), maximumValueLabel: Text("Lol"), label: {
-                    Text("Label")
-                })
-                    .sliderStyle(SkeuomorphSliderStyle())
+                VStack {
+                    Toggle(isOn: $isOn1, label: {
+                        Text("Store data")
+                    })
+                    
+                    TextField("Hello", text: self.$textFieldValue)
+                    
+                    MorphSlider(value: $value, minimumValueLabel: Text("Kek"), maximumValueLabel: Text("Lol"), label: {
+                        Text("Label")
+                    })
+                    
+                    SwiftUI.Slider(value: $value, minimumValueLabel: Text("Kek"), maximumValueLabel: Text("Lol"), label: {
+                        Text("Label")
+                    })
+                    
+                    Button(action: { self.isAlertPresented.toggle() }, label: {
+                        Text("Present Alert")
+                    })
+                        .padding([.top, .bottom], 8)
+                    
+                    Button(action: { self.isActionSheetPresented.toggle() }, label: {
+                        Text("Present Action Sheet")
+                    })
+                    
+                    NavigationLink(destination: Text("kek"), label: {
+                        Text("Let's go")
+                    })
+                    .padding([.top, .bottom], 8)
+                    
+                }
                 
-                Slider(value: $value, minimumValueLabel: Text("Kek"), maximumValueLabel: Text("Lol"), label: {
-                    Text("Label")
-                })
                 
-                Button(action: { self.isAlertPresented.toggle() }, label: {
-                    Text("Present Alert")
-                })
+//                                DatePicker(selection: $date) {
+//                                    Text("kek")
+//                                }
                 
-//                DatePicker(selection: $date) {
-//                    Text("kek")
-//                }
-
+                Spacer()
+                
             }
             .padding()
             .navigationBarTitle("Hello", displayMode: .inline)
-            .alertMorph(isPresented: $isAlertPresented) { () -> Alert in
-                Alert(title: Text("Изменить экран домой"), message: Text(String(repeating: message, count: 1)), primaryButton: .cancel(), secondaryButton: .default(Text("Понятно")))
+            .alertWithStyle(isPresented: $isAlertPresented) { () -> Alert in
+                Alert(title: Text("Изменить экран домой"), message: Text(String(repeating: message, count: 1)), primaryButton: .cancel(), secondaryButton: .destructive(Text("Понятно")))
+            }
+            .actionSheetWithStyle(isPresented: $isActionSheetPresented) { () -> ActionSheet in
+                ActionSheet(title: Text("Удалить"), message: Text("Вы действительно хотите удалить"), buttons: [
+                    .cancel(Text("Отмена")),
+                    .destructive(Text("Удалить")),
+                    .default(Text("Перенести"))
+                ])
             }
         }
-//        .navigationViewStyle(SMNavigationViewStyle())
-        .toggleStyle(SMToggleStyle())
-        .alertStyle(SMAlertStyle())
-        .textFieldStyle(SkeuomorphTextFieldStyle())
-        .datePickerStyle(SMDatePickerStyle())
-        .accentColor(.red)
+            
+            .modifier(StyleViewModifier(isSkeumorphed: $isSkeuomorphed.animation()))
+            .accentColor(.red)
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+    }
+}
+
+struct StyleViewModifier: ViewModifier {
+    
+    @Binding var isSkeumorphed: Bool
+    
+    func body(content: _ViewModifier_Content<StyleViewModifier>) -> some View {
+        ZStack {
+            if isSkeumorphed {
+                content
+                    .toggleStyle(SMToggleStyle())
+                    .sliderStyle(SkeuomorphSliderStyle())
+                    .alertStyle(SMAlertStyle())
+                    .actionSheetStyle(SMActionSheetStyle())
+                    .textFieldStyle(SkeuomorphTextFieldStyle())
+                    .datePickerStyle(SMDatePickerStyle())
+                    .navigationViewStyle(SMNavigationViewStyle())
+            } else {
+                content
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+            }
+        }
     }
 }

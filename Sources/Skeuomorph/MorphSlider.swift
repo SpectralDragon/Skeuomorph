@@ -1,5 +1,5 @@
 //
-//  SMSlider.swift
+//  MorphSlider.swift
 //  Skeuomorph
 //
 //  Created by v.prusakov on 3/14/20.
@@ -7,30 +7,40 @@
 
 import SwiftUI
 
-public struct SMSlider<Label: View, ValueLabel: View>: View {
+public typealias Slider = MorphSlider
+
+public struct MorphSlider<Label: View, ValueLabel: View>: View {
     
     @Environment(\.sliderStyle) var style: AnySliderStyle
     
     let configuration: SliderStyleConfiguration
     
-    public init(value: Binding<Float>,
-                in bounds: ClosedRange<Float> = 0...1,
-                step: Float = 0.01,
+    public init<V: BinaryFloatingPoint>(value: Binding<V>,
+                in bounds: ClosedRange<V> = 0...1,
+                step: V.Stride = 0.01,
                 onEditingChanged: @escaping (Bool) -> Void = { _ in },
                 minimumValueLabel: ValueLabel,
                 maximumValueLabel: ValueLabel,
-                @ViewBuilder label: () -> Label) {
+                @ViewBuilder label: () -> Label) where V.Stride : BinaryFloatingPoint
+    {
         
         let sliderLabel = SliderStyleConfiguration.Label(body: label())
         let minimumLabel = SliderStyleConfiguration.ValueLabel(body: minimumValueLabel)
         let maximumLabel = SliderStyleConfiguration.ValueLabel(body: maximumValueLabel)
         
+        let projectedValue = Binding<Float>(
+            get: { Float(value.wrappedValue) },
+            set: { value.wrappedValue = V($0) }
+        )
+        
+        let newBounds = Float(bounds.lowerBound)...Float(bounds.upperBound)
+        
         self.configuration = SliderStyleConfiguration(label: sliderLabel,
-                                                      projectedValue: value,
+                                                      projectedValue: projectedValue,
                                                       minimumValueLabel: minimumLabel,
                                                       maximumValueLabel: maximumLabel,
-                                                      bounds: bounds,
-                                                      step: step,
+                                                      bounds: newBounds,
+                                                      step: Float(step),
                                                       onEditingChanged: onEditingChanged)
     }
     
@@ -39,7 +49,7 @@ public struct SMSlider<Label: View, ValueLabel: View>: View {
     }
 }
 
-extension SMSlider where ValueLabel == EmptyView {
+extension MorphSlider where ValueLabel == EmptyView {
     
     /// Creates an instance that selects a value from within a range.
     ///
@@ -56,8 +66,8 @@ extension SMSlider where ValueLabel == EmptyView {
     /// example, on iOS, a `Slider` is considered to be actively editing while
     /// the user is touching the knob and sliding it around the track.
     @available(tvOS, unavailable)
-    public init(value: Binding<Float>, in bounds: ClosedRange<Float> = 0...1, onEditingChanged: @escaping (Bool) -> Void = { _ in }, @ViewBuilder label: () -> Label) {
-        self = SMSlider(value: value,
+    public init<V: BinaryFloatingPoint>(value: Binding<V>, in bounds: ClosedRange<V> = 0...1, onEditingChanged: @escaping (Bool) -> Void = { _ in }, @ViewBuilder label: () -> Label) where V.Stride : BinaryFloatingPoint {
+        self = MorphSlider(value: value,
                         in: bounds,
                         step: 0.01,
                         onEditingChanged: onEditingChanged,
@@ -82,12 +92,13 @@ extension SMSlider where ValueLabel == EmptyView {
     /// example, on iOS, a `Slider` is considered to be actively editing while
     /// the user is touching the knob and sliding it around the track.
     @available(tvOS, unavailable)
-    public init(value: Binding<Float>,
-                in bounds: ClosedRange<Float>,
-                step: Float = 1,
+    public init<V: BinaryFloatingPoint>(value: Binding<V>,
+                in bounds: ClosedRange<V>,
+                step: V.Stride = 1,
                 onEditingChanged: @escaping (Bool) -> Void = { _ in },
-                @ViewBuilder label: () -> Label) {
-        self = SMSlider(value: value,
+                @ViewBuilder label: () -> Label
+    ) where V.Stride : BinaryFloatingPoint {
+        self = MorphSlider(value: value,
                         in: bounds,
                         step: step,
                         onEditingChanged: onEditingChanged,
@@ -99,7 +110,7 @@ extension SMSlider where ValueLabel == EmptyView {
 
 @available(iOS 13.0, OSX 10.15, watchOS 6.0, *)
 @available(tvOS, unavailable)
-extension SMSlider where Label == EmptyView, ValueLabel == EmptyView {
+extension MorphSlider where Label == EmptyView, ValueLabel == EmptyView {
     
     /// Creates an instance that selects a value from within a range.
     ///
@@ -115,10 +126,11 @@ extension SMSlider where Label == EmptyView, ValueLabel == EmptyView {
     /// example, on iOS, a `Slider` is considered to be actively editing while
     /// the user is touching the knob and sliding it around the track.
     @available(tvOS, unavailable)
-    public init(value: Binding<Float>,
-                in bounds: ClosedRange<Float> = 0...1,
-                onEditingChanged: @escaping (Bool) -> Void = { _ in }) {
-        self = SMSlider(value: value,
+    public init<V: BinaryFloatingPoint>(value: Binding<V>,
+                in bounds: ClosedRange<V> = 0...1,
+                onEditingChanged: @escaping (Bool) -> Void = { _ in }
+    ) where V.Stride : BinaryFloatingPoint {
+        self = MorphSlider(value: value,
                         in: bounds,
                         step: 0.01,
                         onEditingChanged: onEditingChanged,
@@ -142,11 +154,12 @@ extension SMSlider where Label == EmptyView, ValueLabel == EmptyView {
     /// example, on iOS, a `Slider` is considered to be actively editing while
     /// the user is touching the knob and sliding it around the track.
     @available(tvOS, unavailable)
-    public init(value: Binding<Float>,
-                in bounds: ClosedRange<Float>,
-                step: Float = 1,
-                onEditingChanged: @escaping (Bool) -> Void = { _ in }) {
-        self = SMSlider(value: value,
+    public init<V: BinaryFloatingPoint>(value: Binding<V>,
+                in bounds: ClosedRange<V>,
+                step: V.Stride = 1,
+                onEditingChanged: @escaping (Bool) -> Void = { _ in }
+    ) where V.Stride : BinaryFloatingPoint {
+        self = MorphSlider(value: value,
                         in: bounds,
                         step: step,
                         onEditingChanged: onEditingChanged,
@@ -278,13 +291,13 @@ public extension View {
 
 struct DefaultSliderStyle: SliderStyle {
     func makeBody(configuration: Self.Configuration) -> some View {
-        Slider(value: configuration.projectedValue,
-               in: configuration.bounds,
-               step: configuration.step,
-               onEditingChanged: configuration.onEditingChanged,
-               minimumValueLabel: configuration.minimumValueLabel,
-               maximumValueLabel: configuration.maximumValueLabel,
-               label: { configuration.label })
+        SwiftUI.Slider(value: configuration.projectedValue,
+                       in: configuration.bounds,
+                       step: configuration.step,
+                       onEditingChanged: configuration.onEditingChanged,
+                       minimumValueLabel: configuration.minimumValueLabel,
+                       maximumValueLabel: configuration.maximumValueLabel,
+                       label: { configuration.label })
     }
 }
 
@@ -346,7 +359,7 @@ public struct SkeuomorphSliderStyle: SliderStyle {
                         )
                             .overlay(
                                 Capsule()
-                                    .stroke(Color.gray, lineWidth: 3)
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 2)
                                     .blur(radius: 1)
                                     .frame(width: container.size.width, height: self.progressHeight)
                                     .offset(y: 1.5)
@@ -392,8 +405,6 @@ public struct SkeuomorphSliderStyle: SliderStyle {
                             
                             .frame(width: 26, height: 26)
                             .offset(x: container.size.width * CGFloat(self.value) - 26)
-                            //                            .offset(x: self.isOn ? 30: -30)
-                            
                             .gesture(
                                 DragGesture()
                                     .onChanged { value in

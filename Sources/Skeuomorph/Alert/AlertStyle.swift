@@ -36,13 +36,15 @@ public struct AlertStyleConfiguration {
     
     public struct Alert {
         
-        public struct Button {
+        public struct Button: Identifiable {
             
             public enum Style: String {
                 case cancel
                 case destructive
                 case `default`
             }
+            
+            public let id: String
             
             public let style: Style
             public let label: Text
@@ -63,6 +65,7 @@ public struct AlertStyleConfiguration {
                 
                 let rawStyle = String(describing: internalStyle)
                 
+                self.id = UUID().uuidString
                 self.label = label
                 self.action = action
                 self.style = Style(rawValue: rawStyle) ?? .cancel

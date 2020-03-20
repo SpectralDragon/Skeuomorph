@@ -17,6 +17,7 @@ public struct SMToggleStyle: ToggleStyle {
     
     struct InternalSkeuomorphToggle: View {
         
+        @Environment(\.selectionFeedbackGenerator) private var feedbackGenerator
         
         // Displacement of the knob.
         @State var viewDisplacement: CGSize = .zero
@@ -121,7 +122,8 @@ public struct SMToggleStyle: ToggleStyle {
                 
                 // Toggle knob - moves with the gesture
                 Button(action: {
-                    withAnimation(.easeInOut(duration: 0.25)){
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        self.feedbackGenerator.selectionChanged()
                         self.$isOn.wrappedValue.toggle()
                     }
                     if self.isOn {
@@ -131,7 +133,7 @@ public struct SMToggleStyle: ToggleStyle {
                             self.shouldShowBlueBackground = false
                         }
                     }
-                }){
+                }, label: {
                     Circle()
                         .fill(LinearGradient(
                             gradient: Gradient(
@@ -156,7 +158,8 @@ public struct SMToggleStyle: ToggleStyle {
                         .offset(x: viewDisplacement.width)
                         .offset(x: self.isOn ? 30: -30)
                         .frame(width: 30, height: 30)
-                }
+                })
+                .buttonStyle(ToggleButtonStyle())
             }
             .mask(
                 RoundedRectangle(cornerRadius: 16)
@@ -204,6 +207,7 @@ public struct SMToggleStyle: ToggleStyle {
                         withAnimation(.easeInOut(duration: 0.25)) {
                             // If the knob is dragged for a distance longer than half of the width of the toggle, change the state of the toggle
                             if !self.isOn && value.translation.width > 30 || self.isOn && value.translation.width < -30 {
+                                self.feedbackGenerator.selectionChanged()
                                 self.$isOn.wrappedValue.toggle()
                             }
                             // Reset the position of the toggle to its new default position after the change of state
@@ -218,6 +222,12 @@ public struct SMToggleStyle: ToggleStyle {
                     }
             )
         }
+    }
+}
+
+struct ToggleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Self.Configuration) -> some View {
+        configuration.label
     }
 }
 

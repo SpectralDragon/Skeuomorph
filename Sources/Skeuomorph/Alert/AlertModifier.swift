@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-struct MorphAlertModifier: ViewModifier {
+struct StyleAlertModifier: ViewModifier {
     
     @Binding var isPresented: Bool
     let alertContent: Alert
     
-    func body(content: _ViewModifier_Content<MorphAlertModifier>) -> some View {
+    func body(content: _ViewModifier_Content<StyleAlertModifier>) -> some View {
         InternalView(isPresented: $isPresented, alert: alertContent, content: content)
     }
     
@@ -23,8 +23,7 @@ struct MorphAlertModifier: ViewModifier {
         let content: Content
         
         @Environment(\.alertStyle) var alertStyle
-        
-        
+                
         var body: some View {
             let configuration = AlertStyleConfiguration(content: AlertStyleConfiguration.Content(content),
                                                         alert: alert,
@@ -50,14 +49,16 @@ public extension View {
     ///     currently-presented alert and replace it by a new alert.
     ///
     ///     - content: A closure returning the `Alert` to present.
-    func alertMorph<Item>(item: Binding<Item?>, content: (Item) -> Alert) -> some View where Item : Identifiable {
+    func alertWithStyle<Item>(item: Binding<Item?>, content: (Item) -> Alert) -> some View where Item : Identifiable {
         ZStack {
             if item.wrappedValue != nil {
-                self.modifier(MorphAlertModifier(isPresented: Binding(get: { item.wrappedValue != nil }, set: {
-                    if $0 == false {
-                        item.wrappedValue = nil
-                    }
-                }).animation(), alertContent: content(item.wrappedValue!)))
+                self.modifier(StyleAlertModifier(
+                    isPresented: Binding(get: { item.wrappedValue != nil }, set: {
+                        if $0 == false {
+                            item.wrappedValue = nil
+                        }
+                    }).animation(),
+                    alertContent: content(item.wrappedValue!)))
             } else {
                 self
             }
@@ -70,8 +71,8 @@ public extension View {
     /// - Parameters:
     ///     - isPresented: A `Binding` to whether the `Alert` should be shown.
     ///     - content: A closure returning the `Alert` to present.
-    func alertMorph(isPresented: Binding<Bool>, content: () -> Alert) -> some View {
-        self.modifier(MorphAlertModifier(isPresented: isPresented.animation(), alertContent: content()))
+    func alertWithStyle(isPresented: Binding<Bool>, content: () -> Alert) -> some View {
+        self.modifier(StyleAlertModifier(isPresented: isPresented.animation(), alertContent: content()))
     }
     
 }
@@ -91,7 +92,6 @@ public struct SMAlertStyle: AlertStyle {
         )
         
         let removal = AnyTransition.opacity
-            .combined(with: .scale)
             .animation(.linear(duration: 0.2))
         
         return .asymmetric(insertion: insertion, removal: removal)
@@ -112,7 +112,7 @@ public struct SMAlertStyle: AlertStyle {
                     
                     Rectangle()
                         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-                        .opacity(0.3)
+                        .opacity(0.4)
                         .mask(
                             self.holeShapeMask(in: container.frame(in: .global))
                                 .fill(style: FillStyle(eoFill: true, antialiased: true))
@@ -129,14 +129,9 @@ public struct SMAlertStyle: AlertStyle {
                         
                         // TODO: needs scroll for big text
                         configuration.alert.title
-                            .foregroundColor(.black)
+                            .foregroundColor(.white)
                             .font(.system(size: 20, weight: .semibold))
-                            .overlay(
-                                configuration.alert.title
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .offset(x: 0, y: 1)
-                                    .foregroundColor(.white)
-                        )
+                            .shadow(color: Color(red: 0, green: 0, blue: 0, opacity: 0.3), radius: 0, x: 0, y: -1)
                             .padding(EdgeInsets(top: 20, leading: 8, bottom: 8, trailing: 8))
                         
                         configuration.alert.message
@@ -156,8 +151,8 @@ public struct SMAlertStyle: AlertStyle {
                             ZStack(alignment: .top) {
                                 LinearGradient(gradient: Gradient(
                                     colors: [
-                                        Color(red: 37/255, green: 51/255, blue: 88/255, opacity: 0.9),
-                                        Color(red: 8/255, green: 33/255, blue: 64/255, opacity: 0.9)
+                                        Color(red: 43/255, green: 51/255, blue: 90/255, opacity: 0.9),
+                                        Color(red: 37/255, green: 51/255, blue: 90/255, opacity: 0.9)
                                 ]),
                                                startPoint: .top,
                                                endPoint: .bottom)
@@ -207,22 +202,37 @@ struct AlertButtonStyle: ButtonStyle {
     
     let style: AlertStyleConfiguration.Alert.Button.Style
     
+    @Environment(\.selectionFeedbackGenerator) private var feedbackGenerator
+    
     func makeBody(configuration: Self.Configuration) -> some View {
-        configuration.label
+        
+        if configuration.isPressed {
+            self.feedbackGenerator.selectionChanged()
+        }
+        
+        return
+            configuration.label
             .frame(minWidth: 0, maxWidth: .infinity, idealHeight: 36)
-            .foregroundColor(.black)
+            .foregroundColor(.white)
             .font(.system(size: 17, weight: .semibold))
-            .overlay(
-                configuration.label
-                    .font(.system(size: 17, weight: .semibold))
-                    .offset(x: 0, y: 1)
-                    .foregroundColor(.white)
-        )
+            .shadow(color: Color(red: 0, green: 0, blue: 0, opacity: 0.3), radius: 0, x: 0, y: -1)
             .padding([.bottom, .top], 8)
             .background(
-                LinearGradient(gradient: self.gradient(configuration: configuration),
-                               startPoint: .bottom,
-                               endPoint: .top)
+                GeometryReader { container in
+                    ZStack(alignment: .top) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(self.backgroundColor(for: configuration))
+                            .overlay(
+                                Rectangle()
+                                    .fill(Color.white.opacity(0.3))
+                                    .offset(y: -(container.size.height / 2))
+                                    .blur(radius: 1)
+                        )
+                        
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    }
+                }
         )
             .clipShape(RoundedRectangle(cornerRadius: 4))
             .overlay(
@@ -232,29 +242,30 @@ struct AlertButtonStyle: ButtonStyle {
             .shadow(color: Color.white.opacity(0.2), radius: 0, x: 0, y: 1)
     }
     
-    func gradient(configuration: Self.Configuration) -> Gradient {
+    func backgroundColor(for configuration: Self.Configuration) -> Color {
         switch style {
         case .default:
-            return Gradient(stops: [
-                .init(color: Color(red: 104/255, green: 113/255, blue: 139/255), location: 0),
-                .init(color: Color(red: 85/255, green: 95/255, blue: 122/255), location: 0.5),
-                .init(color: Color(red: 122/255, green: 131/255, blue: 157/255), location: 0.5),
-                .init(color: Color(red: 182/255, green: 185/255, blue: 201/255), location: 1)
-            ])
+            return configuration.isPressed ? Color(red: 68/255, green: 74/255, blue: 92/255) : Color(red: 104/255, green: 113/255, blue: 139/255)
         case .cancel:
-            return Gradient(stops: [
-                .init(color: Color(red: 37/255, green: 51/255, blue: 88/255, opacity: 0.8), location: 0),
-                .init(color: Color(red: 37/255, green: 51/255, blue: 77/255), location: 0.5),
-                .init(color: Color(red: 122/255, green: 131/255, blue: 157/255), location: 0.5),
-                .init(color: Color(red: 182/255, green: 185/255, blue: 201/255), location: 1)
-            ])
+            return configuration.isPressed ? Color(red: 43/255, green: 43/255, blue: 43/255, opacity: 0.5) : Color(red: 43/255, green: 51/255, blue: 90/255, opacity: 0.5)
         case .destructive:
-            return Gradient(stops: [
-                .init(color: Color(red: 104/255, green: 113/255, blue: 139/255), location: 0),
-                .init(color: Color(red: 85/255, green: 95/255, blue: 122/255), location: 0.5),
-                .init(color: Color(red: 122/255, green: 131/255, blue: 157/255), location: 0.5),
-                .init(color: Color(red: 182/255, green: 185/255, blue: 201/255), location: 1)
-            ])
+            return configuration.isPressed ? Color(red: 130/255, green: 28/255, blue: 18/255) : Color(red: 189/255, green: 40/255, blue: 28/255)
         }
+    }
+    
+}
+
+struct UISelectionFeedbackGeneratorKey: EnvironmentKey {
+    static var defaultValue: UISelectionFeedbackGenerator = UISelectionFeedbackGenerator()
+}
+
+extension EnvironmentValues {
+    var selectionFeedbackGenerator: UISelectionFeedbackGenerator {
+        get {
+            let generator = self[UISelectionFeedbackGeneratorKey.self]
+            generator.prepare()
+            return generator
+        }
+        set { self[UISelectionFeedbackGeneratorKey.self] = newValue }
     }
 }
