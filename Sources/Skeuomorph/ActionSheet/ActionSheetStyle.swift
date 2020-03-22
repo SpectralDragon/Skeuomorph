@@ -67,7 +67,9 @@ public struct ActionSheetStyleConfiguration {
             }
             
             if let cancelIndex = buttons.firstIndex(where: { $0.style == .cancel }) {
-                buttons.swapAt(cancelIndex, buttons.count - 1)
+                let element = buttons.remove(at: cancelIndex)
+                
+                buttons.append(element)
             }
             
             self.buttons = buttons

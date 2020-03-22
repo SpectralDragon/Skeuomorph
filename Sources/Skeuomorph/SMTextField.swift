@@ -6,6 +6,11 @@ public struct SkeuomorphTextFieldStyle: TextFieldStyle {
     
     public func _body(configuration: TextField<Self._Label>) -> some View {
         ZStack {
+            
+            Capsule()
+                .fill(Color.white)
+                .frame(height: 32)
+            
             // Text Field container shadow - stays still
             Capsule()
                 .stroke(Color.black, lineWidth: 0.5)

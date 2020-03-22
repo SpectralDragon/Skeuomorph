@@ -30,37 +30,3 @@ public struct SMDatePickerStyle: DatePickerStyle {
         }
     }
 }
-
-public struct DumpingEnvironment<V: View>: View {
-    @Environment(\.self) var env
-    let content: V
-    
-    public init(_ content: V) {
-        self.content = content
-    }
-    
-    public var body: some View {
-        dump(env)
-        return content
-    }
-}
-
-public struct SMNavigationViewStyle: NavigationViewStyle {
-    
-    public init() {}
-    
-    public func _body(configuration: _NavigationViewStyleConfiguration) -> some View {
-        configuration.content
-    }
-    
-    struct InnerNavigationView<Content: View>: View {
-        
-        @Environment(\.self) private var env
-        
-        let content: Content
-        
-        var body: some View {
-            return content
-        }
-    }
-}

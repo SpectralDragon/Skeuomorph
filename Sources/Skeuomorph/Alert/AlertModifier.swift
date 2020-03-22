@@ -239,6 +239,7 @@ struct AlertButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: 4)
                     .stroke(Color.black.opacity(0.5), lineWidth: 1)
             )
+            .animation(.linear(duration: 0.1))
             .shadow(color: Color.white.opacity(0.2), radius: 0, x: 0, y: 1)
     }
     

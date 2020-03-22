@@ -121,7 +121,7 @@ public struct SMActionSheetStyle: ActionSheetStyle {
                             self.makeButton(configuration, button: button)
                                 .padding(.top, button.style == .cancel ? 12 : 0)
                         }
-                        .padding(EdgeInsets(top: 8, leading: 8, bottom: 16, trailing: 8))
+                        .padding(EdgeInsets(top: 8, leading: 8, bottom: container.safeAreaInsets.bottom + 16, trailing: 8))
                     }
                     .background(
                         ZStack(alignment: .top) {
@@ -200,6 +200,7 @@ struct ActionSheetButtonStyle: ButtonStyle {
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(Color.black.opacity(0.5), lineWidth: 3)
             )
+                .animation(.linear(duration: 0.1))
                 .shadow(color: Color.white.opacity(0.1), radius: 0, x: 0, y: 1)
     }
     

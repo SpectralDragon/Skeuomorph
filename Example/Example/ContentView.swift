@@ -19,7 +19,7 @@ struct ContentView: View {
     
     @State var value: Float = 0.5
     
-    @State var textFieldValue = ""
+    @State var textFieldValue = "Title"
     
     @State var date: Date = Date()
     
@@ -34,6 +34,7 @@ struct ContentView: View {
     Мы в свою очередь просто закроем вьюшку)
     """
     
+    @State var isButtonActive = false
     
     var body: some View {
         NavigationView {
@@ -71,23 +72,17 @@ struct ContentView: View {
                         Text("Present Action Sheet")
                     })
                     
-                    NavigationLink(destination: Text("kek"), label: {
+                    NavigationButton(destination: DestinationView(text: "Screen", count: 1), isActive: self.$isButtonActive, label: {
                         Text("Let's go")
                     })
                     .padding([.top, .bottom], 8)
                     
                 }
                 
-                
-//                                DatePicker(selection: $date) {
-//                                    Text("kek")
-//                                }
-                
                 Spacer()
                 
             }
             .padding()
-            .navigationBarTitle("Hello", displayMode: .inline)
             .alertWithStyle(isPresented: $isAlertPresented) { () -> Alert in
                 Alert(title: Text("Изменить экран домой"), message: Text(String(repeating: message, count: 1)), primaryButton: .cancel(), secondaryButton: .destructive(Text("Понятно")))
             }
@@ -98,8 +93,13 @@ struct ContentView: View {
                     .default(Text("Перенести"))
                 ])
             }
+            .navigationBarTitle(self.textFieldValue)
+            .navigationBarButtonItems(
+                leading: Button("Kek", action: { }),
+                trailing: Button("Фотоальбом", action: { self.isButtonActive = true })
+            )
+            .navigationBarTintColor(.black)
         }
-            
             .modifier(StyleViewModifier(isSkeumorphed: $isSkeuomorphed.animation()))
             .accentColor(.red)
     }
@@ -131,5 +131,24 @@ struct StyleViewModifier: ViewModifier {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
             }
         }
+    }
+}
+
+struct DestinationView: View {
+    
+    let text: String
+    let count: Int
+    
+    var body: some View {
+        VStack {
+            Text(self.text)
+            
+            NavigationButton(destination: DestinationView(text: self.text, count: count + 1), label: {
+                Text("Go next")
+            })
+        }
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+        .navigationBarTitle("\(self.text) \(self.count)")
+        .navigationBarButtonItems(trailing: Button("Item \(self.count)", action: {}))
     }
 }
