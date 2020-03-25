@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Morph",
+        "repositoryURL": "https://github.com/SpectralDragon/Morph.git",
+        "state": {
+          "branch": null,
+          "revision": "7980fa26f4772801a93b9c041efe4484a7fe700a",
+          "version": "1.0.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

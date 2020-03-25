@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Skeuomorph
+import Morph
 
 struct ContentView: View {
     
@@ -35,6 +36,8 @@ struct ContentView: View {
     """
     
     @State var isButtonActive = false
+    
+    @State var navSelection: String?
     
     var body: some View {
         NavigationView {
@@ -72,7 +75,7 @@ struct ContentView: View {
                         Text("Present Action Sheet")
                     })
                     
-                    NavigationButton(destination: DestinationView(text: "Screen", count: 1), isActive: self.$isButtonActive, label: {
+                    NavigationButton(destination: DestinationView(text: "Screen", count: 1), tag: "1", selection: self.$navSelection, label: {
                         Text("Let's go")
                     })
                     .padding([.top, .bottom], 8)
@@ -96,7 +99,7 @@ struct ContentView: View {
             .navigationBarTitle(self.textFieldValue)
             .navigationBarButtonItems(
                 leading: Button("Kek", action: { }),
-                trailing: Button("Фотоальбом", action: { self.isButtonActive = true })
+                trailing: Button("Фотоальбом", action: { self.navSelection = "1" })
             )
             .navigationBarTintColor(.black)
         }
@@ -116,7 +119,7 @@ struct StyleViewModifier: ViewModifier {
     @Binding var isSkeumorphed: Bool
     
     func body(content: _ViewModifier_Content<StyleViewModifier>) -> some View {
-        ZStack {
+        Group {
             if isSkeumorphed {
                 content
                     .toggleStyle(SMToggleStyle())
@@ -124,7 +127,6 @@ struct StyleViewModifier: ViewModifier {
                     .alertStyle(SMAlertStyle())
                     .actionSheetStyle(SMActionSheetStyle())
                     .textFieldStyle(SkeuomorphTextFieldStyle())
-                    .datePickerStyle(SMDatePickerStyle())
                     .navigationViewStyle(SMNavigationViewStyle())
             } else {
                 content
@@ -142,7 +144,7 @@ struct DestinationView: View {
     var body: some View {
         VStack {
             Text(self.text)
-            
+
             NavigationButton(destination: DestinationView(text: self.text, count: count + 1), label: {
                 Text("Go next")
             })

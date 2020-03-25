@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Morph
 
 public struct DumpingEnvironment<V: View>: View {
     @Environment(\.self) var env
@@ -21,172 +22,7 @@ public struct DumpingEnvironment<V: View>: View {
     }
 }
 
-public extension View {
-    func navigationBarTitle(_ text: Text) -> some View {
-        self.preference(key: NavigationBarTitlePreferences.self, value: text)
-        .navigationBarTitle(text, displayMode: .inline)
-    }
-    
-    func navigationBarTitle(_ string: String) -> some View {
-        self.preference(key: NavigationBarTitlePreferences.self, value: Text(string))
-        .navigationBarTitle(Text(string), displayMode: .inline)
-    }
-    
-    func navigationBarBackground<V: View>(_ view: V) -> some View {
-        self.preference(key: NavigationBarBackgroundPreference.self, value: .init(view))
-    }
-    
-    func navigationBarTintColor(_ color: Color) -> some View {
-        self.preference(key: NavigationBarTintColorPreference.self, value: color)
-    }
-}
-
-public struct NavigationBarButtomItems: Equatable {
-    public struct Items: View, Equatable {
-        
-        public static func == (lhs: NavigationBarButtomItems.Items, rhs: NavigationBarButtomItems.Items) -> Bool {
-            lhs.id == rhs.id
-        }
-        
-        private let id: String
-        
-        init<T: View>(_ view: T) {
-            self.id = UUID().uuidString
-            self.body = AnyView(view.id(self.id))
-        }
-        
-        public var body: AnyView
-    }
-    
-    init<L: View, T: View>(leading: L, trailing: T) {
-        self.leading = .init(leading)
-        self.trailing = .init(trailing)
-    }
-    
-    init() {
-        self.leading = .init(EmptyView())
-        self.trailing = .init(EmptyView())
-    }
-    
-    public let leading: Items
-    public let trailing: Items
-}
-
-public extension View {
-
-    /// Configures the navigation bar items for this view.
-    ///
-    /// This modifier only takes effect when this view is inside of and visible
-    /// within a `NavigationView`.
-    ///
-    /// - Parameters:
-    ///     - leading: A view that appears on the leading edge of the title.
-    ///     - trailing: A view that appears on the trailing edge of the title.
-    @available(OSX, unavailable)
-    @available(watchOS, unavailable)
-    func navigationBarButtonItems<L, T>(leading: L, trailing: T) -> some View where L : View, T : View {
-        self.preference(key: NavigationBarButtonItemsPreferences.self, value: NavigationBarButtomItems(leading: leading, trailing: trailing))
-        .navigationBarItems(leading: leading, trailing: trailing)
-    }
-
-
-    /// Configures the navigation bar items for this view.
-    ///
-    /// This modifier only takes effect when this view is inside of and visible
-    /// within a `NavigationView`.
-    ///
-    /// - Parameters:
-    ///     - leading: A view that appears on the leading edge of the title.
-    @available(OSX, unavailable)
-    @available(watchOS, unavailable)
-    func navigationBarButtonItems<L>(leading: L) -> some View where L : View {
-        self.preference(key: NavigationBarButtonItemsPreferences.self, value: NavigationBarButtomItems(leading: leading, trailing: EmptyView()))
-        .navigationBarItems(leading: leading)
-    }
-
-
-    /// Configures the navigation bar items for this view.
-    ///
-    /// This modifier only takes effect when this view is inside of and visible
-    /// within a `NavigationView`.
-    ///
-    /// - Parameters:
-    ///     - trailing: A view shown on the trailing edge of the title.
-    @available(OSX, unavailable)
-    @available(watchOS, unavailable)
-    func navigationBarButtonItems<T>(trailing: T) -> some View where T : View {
-        self.preference(key: NavigationBarButtonItemsPreferences.self, value: NavigationBarButtomItems(leading: EmptyView(), trailing: trailing))
-        .navigationBarItems(trailing: trailing)
-    }
-}
-
-struct NavigationViewStyleKey: EnvironmentKey {
-    static var defaultValue: AnyNavigationViewStyle?
-}
-
-public protocol NavigationViewStyle {
-    
-    associatedtype Body: View
-    
-    func makeBody(configuration: Self.Configuration) -> Self.Body
-    
-    typealias Configuration = NavigationViewStyleConfiguration
-}
-
-extension EnvironmentValues {
-    var navigationViewStyle: AnyNavigationViewStyle? {
-        get { self[NavigationViewStyleKey.self] }
-        set { self[NavigationViewStyleKey.self] = newValue }
-    }
-}
-
-// MARK: - Environment Key
-
-extension NavigationViewStyle {
-    func makeBodyTypeErased(configuration: Self.Configuration) -> AnyView {
-        AnyView(self.makeBody(configuration: configuration))
-    }
-}
-
-public struct AnyNavigationViewStyle: NavigationViewStyle {
-    private let _makeBody: (NavigationViewStyle.Configuration) -> AnyView
-    
-    public init<ST: NavigationViewStyle>(_ style: ST) {
-        self._makeBody = style.makeBodyTypeErased
-    }
-    
-    public func makeBody(configuration: NavigationViewStyle.Configuration) -> AnyView {
-        return self._makeBody(configuration)
-    }
-}
-
-public struct NavigationViewStyleConfiguration {
-    public struct Content: View {
-        init<V: View>(_ view: V) {
-            self.body = AnyView(view)
-        }
-        
-        public var body: AnyView
-    }
-    
-    public struct BackgroundContent: View {
-        
-        init<V: View>(_ view: V) {
-            self.body = AnyView(view)
-        }
-        
-        public var body: AnyView
-    }
-    
-    public let content: Content
-    public let navigationBarItems: NavigationBarButtomItems
-    public let navigationBarTitle: Text
-    public let previousNavigationBarTitle: Text?
-    public let navigationBarBackground: BackgroundContent
-    public let navigationBarTintColor: Color
-}
-
-public struct SMNavigationViewStyle: SwiftUI.NavigationViewStyle, NavigationViewStyle {
+public struct SMNavigationViewStyle: SwiftUI.NavigationViewStyle, Morph.NavigationViewStyle {
     public func _body(configuration: _NavigationViewStyleConfiguration) -> some View {
         MorphNavigationView {
             configuration.content
@@ -197,7 +33,7 @@ public struct SMNavigationViewStyle: SwiftUI.NavigationViewStyle, NavigationView
     public init() {}
     
     public func makeBody(configuration: NavigationViewStyleConfiguration) -> some View {
-        HostView(configuration: configuration)//HostView(configuration: configuration)
+        HostView(configuration: configuration)
     }
     
     struct HostView: View {
@@ -326,6 +162,7 @@ struct AdditionalSafeAreaInsets: UIViewControllerRepresentable {
 
 struct BackButton: View {
     @Environment(\.navigationStack) private var navigationStack
+    
     let previousTitle: Text?
     
     var body: some View {
@@ -396,56 +233,5 @@ struct NavigationBarButtonStyle: ButtonStyle {
                     }
                 }
             }
-    }
-}
-
-extension UIColor {
-    public convenience init?(hex: String) {
-        let r, g, b, a: CGFloat
-
-        if hex.hasPrefix("#") {
-            let start = hex.index(hex.startIndex, offsetBy: 1)
-            let hexColor = String(hex[start...])
-
-            if hexColor.count == 8 {
-                let scanner = Scanner(string: hexColor)
-                var hexNumber: UInt64 = 0
-
-                if scanner.scanHexInt64(&hexNumber) {
-                    r = CGFloat((hexNumber & 0xff000000) >> 24) / 255
-                    g = CGFloat((hexNumber & 0x00ff0000) >> 16) / 255
-                    b = CGFloat((hexNumber & 0x0000ff00) >> 8) / 255
-                    a = CGFloat(hexNumber & 0x000000ff) / 255
-
-                    self.init(red: r, green: g, blue: b, alpha: a)
-                    return
-                }
-            }
-        }
-
-        return nil
-    }
-}
-
-extension Color {
-//    public static let primary: Color
-    
-    var uiColor: UIColor? {
-        switch self {
-        case .black: return .black
-        case .white: return .white
-        case .clear: return .clear
-        case .blue: return .blue
-        case .yellow: return .yellow
-        case .gray: return .gray
-        case .green: return .green
-        case .pink: return .systemPink
-        case .secondary: return .secondarySystemFill
-        case .orange: return .orange
-        case .purple: return .purple
-        case .red: return .red
-        default:
-            return UIColor(hex: self.description)
-        }
     }
 }
